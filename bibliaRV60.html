@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>📖 Biblia Reina Valera 1960</title>
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -84,6 +84,10 @@
         .c-input{padding:16px;border-top:1px solid var(--border)}
         .c-ta{width:100%;min-height:80px;border:1px solid var(--border);border-radius:var(--rs);padding:12px;font-size:14px;resize:vertical;outline:none}
 
+        /* Comments cards */
+        .com-card{background:var(--bg2);border-radius:12px;padding:12px;margin-bottom:12px;border-left:4px solid var(--google-blue);font-size:14px;word-break:break-word}
+        .com-time{font-size:10px;color:var(--t3);margin-top:6px;display:block}
+
         /* Loader & Toast */
         .loader{display:none;position:fixed;inset:0;background:rgba(255,255,255,.95);z-index:1000;justify-content:center;align-items:center;flex-direction:column;gap:16px}
         .loader.show{display:flex}
@@ -94,6 +98,60 @@
 
         /* Dark Mode */
         body.dark{--bg:#202124;--bg2:#1a1a1e;--bg3:#303134;--t1:#e8eaed;--t2:#9aa0a6;--t3:#5f6368;--border:#3c4043}
+
+        /* ========== RESPONSIVE MÓVIL: TODO VISIBLE, TEXTO LEGIBLE ========== */
+        @media screen and (max-width: 680px) {
+            body { overflow-y: auto; height: auto; }
+            .header { flex-wrap: wrap; height: auto; padding: 8px 12px; row-gap: 10px; position: sticky; top: 0; z-index: 200; }
+            .logo { min-width: auto; flex: 1; }
+            .logo h1 { font-size: 18px; }
+            .actions { min-width: auto; gap: 4px; }
+            .btn { padding: 6px 12px; font-size: 12px; }
+            .search-box { order: 3; width: 100%; max-width: 100%; margin: 4px 0 2px; flex: auto; }
+            .search-bar { height: 42px; font-size: 15px; }
+
+            /* Layout vertical: todo en columna, sin ocultamientos */
+            .layout { display: block; height: auto; margin-top: 0; }
+            .bsidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); overflow-y: visible; max-height: none; padding-bottom: 12px; }
+            .content { width: 100%; padding: 16px 14px; overflow-y: visible; height: auto; }
+            .csidebar { width: 100% !important; border-left: none; border-top: 1px solid var(--border); transition: none; }
+            .csidebar.hide { display: none; width: 100%; }
+
+            /* Versos: acciones siempre visibles y táctiles */
+            .verse { padding: 12px 10px; position: relative; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px; }
+            .v-num { vertical-align: baseline; font-size: 13px; margin-right: 6px; }
+            .v-text { flex: 1 1 100%; line-height: 1.7; }
+            .v-acts { position: static; transform: none; display: flex; margin-top: 8px; justify-content: flex-end; gap: 12px; width: 100%; }
+            .verse:hover .v-acts { display: flex; }
+            .v-act { width: 40px; height: 40px; background: var(--bg3); }
+            .v-act .material-icons { font-size: 20px; }
+
+            /* Cuadrícula de capítulos: botones más grandes y touch */
+            .ch-grid button { width: 44px; height: 44px; font-size: 14px; }
+            .ch-nav button { padding: 8px 14px; font-size: 14px; }
+
+            /* Ajustes de márgenes para lectura fluida */
+            .v-container { max-width: 100%; }
+            .verse { line-height: 1.75; }
+
+            /* Barra de libros: elementos táctiles */
+            .b-item { padding: 12px 16px; font-size: 15px; }
+            .b-item .abbr { font-size: 12px; padding: 3px 8px; }
+
+            /* Comentarios sidebar móvil */
+            .c-hdr h3 { font-size: 18px; }
+            .c-ta { font-size: 15px; }
+            .com-card { padding: 14px; }
+        }
+
+        /* Extra small (<=480px) refinamiento */
+        @media screen and (max-width: 480px) {
+            .content { padding: 12px; }
+            .verse { font-size: 15px; }
+            .ch-hdr h2 { font-size: 22px; }
+            .btn span.material-icons { font-size: 18px; }
+            .font-btn { width: 36px; height: 36px; }
+        }
     </style>
 </head>
 <body>
@@ -142,12 +200,12 @@
     </main>
 
     <aside class="csidebar hide" id="cSidebar">
-        <div class="c-hdr"><h3>Comentarios</h3></div>
-        <div class="c-body" id="cBody"></div>
+        <div class="c-hdr"><h3>📝 Mis notas</h3><button class="btn" id="closeCommentsBtn" style="padding:4px 8px; min-width:auto">✕</button></div>
+        <div class="c-body" id="cBody"><div style="color:var(--t3); text-align:center; padding:20px">Selecciona un versículo para añadir notas</div></div>
         <div class="c-input">
             <div id="curRef" style="font-size:12px; color:var(--google-blue); margin-bottom:8px"></div>
-            <textarea class="c-ta" id="cTa" placeholder="Añade una nota..."></textarea>
-            <button class="btn" id="cAdd" style="width:100%; margin-top:8px; justify-content:center">Guardar</button>
+            <textarea class="c-ta" id="cTa" placeholder="Escribe tu comentario, reflexión o nota..."></textarea>
+            <button class="btn" id="cAdd" style="width:100%; margin-top:8px; justify-content:center">💾 Guardar nota</button>
         </div>
     </aside>
 </div>
@@ -160,7 +218,7 @@ const BOOKS = [
 const state = {
     curBook: null, curCh: null,
     fontSize: 16,
-    comments: JSON.parse(localStorage.getItem('bc') || '{}'),
+    comments: JSON.parse(localStorage.getItem('bc_comments') || '{}'),
     dark: localStorage.getItem('bd') === 'true',
     cache: {}
 };
@@ -179,6 +237,7 @@ async function loadChapter(bookIdx, chapter) {
 
 function renderBooks() {
     const ot = document.getElementById('otBooks'), nt = document.getElementById('ntBooks');
+    ot.innerHTML = ''; nt.innerHTML = '';
     BOOKS.forEach((b, i) => {
         const d = document.createElement('div');
         d.className = 'b-item'; d.innerHTML = `<span class="abbr">${b.abbr}</span><span>${b.name}</span>`;
@@ -197,21 +256,22 @@ function selectBook(idx) {
     h += '</div></div>';
     document.getElementById('chHeader').innerHTML = h;
     document.getElementById('vCont').innerHTML = '';
+    state.curCh = null;
 }
 
 async function goChapter(idx, ch) {
     state.curCh = ch;
-    document.getElementById('loader').classList.add('show');
+    const loader = document.getElementById('loader');
+    loader.classList.add('show');
     const data = await loadChapter(idx, ch);
-    document.getElementById('loader').classList.remove('show');
+    loader.classList.remove('show');
     if (data) renderVerses(data, idx, ch);
+    else showMsg("Error al cargar capítulo");
 }
 
 function renderVerses(data, idx, ch) {
     const b = BOOKS[idx];
     const cont = document.getElementById('vCont');
-    
-    // Header de navegación dentro del capítulo
     let h = `<div class="ch-hdr" style="margin-top:20px">
                 <h3>${b.name} ${ch}</h3>
                 <div class="ch-nav">`;
@@ -221,34 +281,83 @@ function renderVerses(data, idx, ch) {
 
     data.verses.forEach(v => {
         const ref = `${b.name} ${ch}:${v.verse}`;
-        // Escapamos el texto para evitar errores en el atributo onclick
         const cleanText = v.text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        
         h += `<div class="verse" id="v-${v.verse}">
             <span class="v-num">${v.verse}</span>
             <span class="v-text" style="font-size:${state.fontSize}px">${v.text}</span>
             <div class="v-acts">
-                <button class="v-act" onclick="copyV('${ref}', '${cleanText}')" title="Copiar"><span class="material-icons" style="font-size:16px">content_copy</span></button>
+                <button class="v-act" onclick="copyV('${ref}', '${cleanText.replace(/\n/g,' ')}')" title="Copiar"><span class="material-icons" style="font-size:16px">content_copy</span></button>
                 <button class="v-act" onclick="selVerse('${ref}')" title="Comentar"><span class="material-icons" style="font-size:16px">comment</span></button>
-            </div></div>`;
+            </div>
+        </div>`;
     });
-
-    // IMPORTANTE: Usamos innerHTML para no destruir el contenedor vCont
     cont.innerHTML = h;
     document.getElementById('content').scrollTop = 0;
+    if (window.innerWidth <= 680) window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function copyV(ref, text) {
     const fullText = `${ref} - ${text}`;
-    navigator.clipboard.writeText(fullText).then(() => {
-        showMsg("Copiado: " + ref);
-    });
+    navigator.clipboard.writeText(fullText).then(() => showMsg(`✔ Copiado: ${ref}`));
 }
 
+let currentCommentRef = "";
+
 function selVerse(ref) {
+    currentCommentRef = ref;
     document.getElementById('curRef').textContent = ref;
-    document.getElementById('cSidebar').classList.remove('hide');
+    const sidebar = document.getElementById('cSidebar');
+    sidebar.classList.remove('hide');
+    renderCommentsForRef(ref);
     document.getElementById('cTa').focus();
+    if (window.innerWidth <= 680) setTimeout(() => sidebar.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+function renderCommentsForRef(ref) {
+    const container = document.getElementById('cBody');
+    const commentsList = state.comments[ref] || [];
+    if (!commentsList.length) {
+        container.innerHTML = `<div style="color:var(--t3); text-align:center; padding:20px">💬 Sin notas para este versículo. Escribe tu reflexión.</div>`;
+        return;
+    }
+    let html = '';
+    commentsList.forEach((note, idx) => {
+        const timeStr = note.timestamp ? new Date(note.timestamp).toLocaleString() : 'Nota guardada';
+        html += `<div class="com-card">
+                    <div>📌 ${escapeHtml(note.text)}</div>
+                    <small class="com-time">${timeStr}</small>
+                    <div style="display:flex; justify-content:flex-end; margin-top:6px">
+                        <button class="v-act" onclick="deleteComment('${ref.replace(/'/g, "\\'")}', ${idx})" style="width:28px;height:28px;background:var(--bg3);border:none;border-radius:50%;cursor:pointer">🗑️</button>
+                    </div>
+                 </div>`;
+    });
+    container.innerHTML = html;
+}
+
+function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+function deleteComment(ref, idx) {
+    if(state.comments[ref] && state.comments[ref][idx]){
+        state.comments[ref].splice(idx,1);
+        if(state.comments[ref].length===0) delete state.comments[ref];
+        localStorage.setItem('bc_comments', JSON.stringify(state.comments));
+        renderCommentsForRef(ref);
+        showMsg("Nota eliminada");
+    }
+}
+
+function addCurrentComment() {
+    const ref = currentCommentRef;
+    if (!ref) { showMsg("Selecciona un versículo primero"); return; }
+    const textarea = document.getElementById('cTa');
+    const commentText = textarea.value.trim();
+    if (!commentText) { showMsg("Escribe un comentario antes de guardar"); return; }
+    if (!state.comments[ref]) state.comments[ref] = [];
+    state.comments[ref].push({ text: commentText, timestamp: Date.now() });
+    localStorage.setItem('bc_comments', JSON.stringify(state.comments));
+    textarea.value = '';
+    renderCommentsForRef(ref);
+    showMsg("Nota guardada ✨");
 }
 
 function showMsg(m) {
@@ -263,13 +372,67 @@ function toggleTheme() {
     localStorage.setItem('bd', state.dark);
 }
 
-// Inicialización
-renderBooks();
-if(state.dark) document.body.classList.add('dark');
-document.getElementById('themeBtn').onclick = toggleTheme;
-document.getElementById('fInc').onclick = () => { state.fontSize += 2; document.querySelectorAll('.v-text').forEach(e => e.style.fontSize = state.fontSize+'px'); };
-document.getElementById('fDec').onclick = () => { state.fontSize = Math.max(12, state.fontSize-2); document.querySelectorAll('.v-text').forEach(e => e.style.fontSize = state.fontSize+'px'); };
-document.getElementById('cToggle').onclick = () => document.getElementById('cSidebar').classList.toggle('hide');
+function adjustFontSize(delta) {
+    state.fontSize = Math.min(28, Math.max(14, state.fontSize + delta));
+    document.querySelectorAll('.v-text').forEach(e => e.style.fontSize = state.fontSize + 'px');
+}
+
+// Búsqueda simple por referencia
+function setupSearch() {
+    const input = document.getElementById('searchInput');
+    input.addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') {
+            const query = input.value.trim();
+            if(!query) return;
+            const match = query.match(/([a-zA-ZáéíóúüñÑ]+)\s+(\d+):(\d+)/i);
+            if(match){
+                const bookQuery = match[1].toLowerCase();
+                const chapter = parseInt(match[2]);
+                const verse = parseInt(match[3]);
+                const bookIndex = BOOKS.findIndex(b => b.name.toLowerCase().includes(bookQuery) || b.abbr.toLowerCase() === bookQuery);
+                if(bookIndex !== -1 && chapter >=1 && chapter <= BOOKS[bookIndex].ch){
+                    selectBook(bookIndex);
+                    setTimeout(() => goChapter(bookIndex, chapter).then(() => {
+                        setTimeout(() => {
+                            const el = document.getElementById(`v-${verse}`);
+                            if(el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            else showMsg(`Versículo ${chapter}:${verse} no encontrado`);
+                        }, 150);
+                    }), 50);
+                    return;
+                }
+            }
+            showMsg("Formato: Libro Capítulo:Versículo (Ej: Juan 3:16)");
+        }
+    });
+}
+
+// Inicialización y eventos
+function init() {
+    renderBooks();
+    if(state.dark) document.body.classList.add('dark');
+    document.getElementById('themeBtn').onclick = toggleTheme;
+    document.getElementById('fInc').onclick = () => adjustFontSize(2);
+    document.getElementById('fDec').onclick = () => adjustFontSize(-2);
+    const cToggle = document.getElementById('cToggle');
+    const closeComments = document.getElementById('closeCommentsBtn');
+    cToggle.onclick = () => document.getElementById('cSidebar').classList.toggle('hide');
+    closeComments.onclick = () => document.getElementById('cSidebar').classList.add('hide');
+    document.getElementById('cAdd').onclick = addCurrentComment;
+    setupSearch();
+    // opcional: si hay un comentario activo al cargar
+    const storedFont = localStorage.getItem('bible_font_size');
+    if(storedFont) state.fontSize = parseInt(storedFont);
+    window.addEventListener('beforeunload', () => localStorage.setItem('bible_font_size', state.fontSize));
+}
+
+init();
+window.goChapter = goChapter;
+window.selectBook = selectBook;
+window.copyV = copyV;
+window.selVerse = selVerse;
+window.deleteComment = deleteComment;
+window.goChapter = goChapter;
 </script>
 </body>
 </html>
