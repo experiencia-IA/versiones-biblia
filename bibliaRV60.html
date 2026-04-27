@@ -30,9 +30,7 @@
         .search-bar:focus{background:var(--bg);box-shadow:var(--shadow2)}
         .search-bar::placeholder{color:var(--t3)}
         .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--t2);pointer-events:none}
-        .filter-btn{border:none;background:transparent;color:var(--google-blue);cursor:pointer;padding:6px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;right:8px;top:50%;transform:translateY(-50%)}
-        .filter-btn:hover{background:rgba(66,133,244,.1)}
-
+        
         .actions{display:flex;align-items:center;gap:8px;min-width:220px;justify-content:flex-end}
         .btn{border:none;background:var(--bg3);color:var(--t2);cursor:pointer;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;transition:.2s;font-family:'Roboto',sans-serif}
         .btn:hover{background:#e8eaed;color:var(--t1)}
@@ -99,7 +97,7 @@
         /* Dark Mode */
         body.dark{--bg:#202124;--bg2:#1a1a1e;--bg3:#303134;--t1:#e8eaed;--t2:#9aa0a6;--t3:#5f6368;--border:#3c4043}
 
-        /* ========== RESPONSIVE MÓVIL: TODO VISIBLE, TEXTO LEGIBLE ========== */
+        /* ========== RESPONSIVE MÓVIL ========== */
         @media screen and (max-width: 680px) {
             body { overflow-y: auto; height: auto; }
             .header { flex-wrap: wrap; height: auto; padding: 8px 12px; row-gap: 10px; position: sticky; top: 0; z-index: 200; }
@@ -110,14 +108,12 @@
             .search-box { order: 3; width: 100%; max-width: 100%; margin: 4px 0 2px; flex: auto; }
             .search-bar { height: 42px; font-size: 15px; }
 
-            /* Layout vertical: todo en columna, sin ocultamientos */
             .layout { display: block; height: auto; margin-top: 0; }
             .bsidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); overflow-y: visible; max-height: none; padding-bottom: 12px; }
             .content { width: 100%; padding: 16px 14px; overflow-y: visible; height: auto; }
             .csidebar { width: 100% !important; border-left: none; border-top: 1px solid var(--border); transition: none; }
             .csidebar.hide { display: none; width: 100%; }
 
-            /* Versos: acciones siempre visibles y táctiles */
             .verse { padding: 12px 10px; position: relative; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px; }
             .v-num { vertical-align: baseline; font-size: 13px; margin-right: 6px; }
             .v-text { flex: 1 1 100%; line-height: 1.7; }
@@ -126,25 +122,17 @@
             .v-act { width: 40px; height: 40px; background: var(--bg3); }
             .v-act .material-icons { font-size: 20px; }
 
-            /* Cuadrícula de capítulos: botones más grandes y touch */
             .ch-grid button { width: 44px; height: 44px; font-size: 14px; }
             .ch-nav button { padding: 8px 14px; font-size: 14px; }
-
-            /* Ajustes de márgenes para lectura fluida */
             .v-container { max-width: 100%; }
             .verse { line-height: 1.75; }
-
-            /* Barra de libros: elementos táctiles */
             .b-item { padding: 12px 16px; font-size: 15px; }
             .b-item .abbr { font-size: 12px; padding: 3px 8px; }
-
-            /* Comentarios sidebar móvil */
             .c-hdr h3 { font-size: 18px; }
             .c-ta { font-size: 15px; }
             .com-card { padding: 14px; }
         }
 
-        /* Extra small (<=480px) refinamiento */
         @media screen and (max-width: 480px) {
             .content { padding: 12px; }
             .verse { font-size: 15px; }
@@ -163,7 +151,7 @@
     <div class="logo"><span class="material-icons">menu_book</span><h1>Biblia Digital</h1><span class="ver">RV1960</span></div>
     <div class="search-box">
         <span class="material-icons search-icon">search</span>
-        <input type="text" class="search-bar" id="searchInput" placeholder="Buscar texto o referencia (ej: Juan 3:16)" autocomplete="off">
+        <input type="text" class="search-bar" id="searchInput" placeholder="Busca libro, pasaje (Juan 3:16) o frase..." autocomplete="off">
     </div>
     <div class="actions">
         <div class="font-btns">
@@ -192,6 +180,9 @@
                     <p>Selecciona un libro para comenzar la lectura.</p>
                 </div>
             </div>
+            
+            <div id="searchResults" style="display:none; padding-bottom: 40px;"></div>
+            
             <div id="chContent" style="display:none">
                 <div id="chHeader"></div>
                 <div id="vCont" class="v-container"></div>
@@ -249,6 +240,7 @@ function renderBooks() {
 function selectBook(idx) {
     state.curBook = idx;
     document.getElementById('welcome').style.display = 'none';
+    if(document.getElementById('searchResults')) document.getElementById('searchResults').style.display = 'none';
     document.getElementById('chContent').style.display = 'block';
     const b = BOOKS[idx];
     let h = `<div class="ch-hdr"><h2>${b.name}</h2><div class="ch-grid">`;
@@ -377,34 +369,116 @@ function adjustFontSize(delta) {
     document.querySelectorAll('.v-text').forEach(e => e.style.fontSize = state.fontSize + 'px');
 }
 
-// Búsqueda simple por referencia
+// Búsqueda Inteligente (Referencia, Libro o Texto)
 function setupSearch() {
     const input = document.getElementById('searchInput');
-    input.addEventListener('keypress', (e) => {
+    input.addEventListener('keypress', async (e) => {
         if(e.key === 'Enter') {
             const query = input.value.trim();
             if(!query) return;
-            const match = query.match(/([a-zA-ZáéíóúüñÑ]+)\s+(\d+):(\d+)/i);
-            if(match){
-                const bookQuery = match[1].toLowerCase();
-                const chapter = parseInt(match[2]);
-                const verse = parseInt(match[3]);
-                const bookIndex = BOOKS.findIndex(b => b.name.toLowerCase().includes(bookQuery) || b.abbr.toLowerCase() === bookQuery);
+
+            // 1. Es una referencia exacta con versículo? (Ej: Juan 3:16 o 1 Juan 3:16)
+            const matchVerse = query.match(/^([\d]*\s*[a-zA-ZáéíóúüñÑ\s]+?)\s+(\d+):(\d+)$/i);
+            if(matchVerse){
+                const bookQuery = matchVerse[1].toLowerCase().trim();
+                const chapter = parseInt(matchVerse[2]);
+                const verse = parseInt(matchVerse[3]);
+                const bookIndex = BOOKS.findIndex(b => b.name.toLowerCase() === bookQuery || b.abbr.toLowerCase() === bookQuery);
                 if(bookIndex !== -1 && chapter >=1 && chapter <= BOOKS[bookIndex].ch){
-                    selectBook(bookIndex);
-                    setTimeout(() => goChapter(bookIndex, chapter).then(() => {
-                        setTimeout(() => {
-                            const el = document.getElementById(`v-${verse}`);
-                            if(el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            else showMsg(`Versículo ${chapter}:${verse} no encontrado`);
-                        }, 150);
-                    }), 50);
+                    goToSearchResult(bookIndex, chapter, verse);
                     return;
                 }
             }
-            showMsg("Formato: Libro Capítulo:Versículo (Ej: Juan 3:16)");
+
+            // 2. Es una referencia solo con capítulo? (Ej: Mateo 5)
+            const matchCh = query.match(/^([\d]*\s*[a-zA-ZáéíóúüñÑ\s]+?)\s+(\d+)$/i);
+            if(matchCh){
+                const bookQuery = matchCh[1].toLowerCase().trim();
+                const chapter = parseInt(matchCh[2]);
+                const bookIndex = BOOKS.findIndex(b => b.name.toLowerCase() === bookQuery || b.abbr.toLowerCase() === bookQuery);
+                if(bookIndex !== -1 && chapter >=1 && chapter <= BOOKS[bookIndex].ch){
+                    selectBook(bookIndex);
+                    setTimeout(() => goChapter(bookIndex, chapter), 50);
+                    return;
+                }
+            }
+
+            // 3. Es solo un libro? (Ej: Génesis o Gn)
+            const exactBookIdx = BOOKS.findIndex(b => b.name.toLowerCase() === query.toLowerCase() || b.abbr.toLowerCase() === query.toLowerCase());
+            if (exactBookIdx !== -1) {
+                selectBook(exactBookIdx);
+                return;
+            }
+
+            // 4. Búsqueda de texto completo en la Biblia usando API
+            const loader = document.getElementById('loader');
+            document.getElementById('ltxt').textContent = "Buscando en la Biblia...";
+            loader.classList.add('show');
+            try {
+                const res = await fetch(`https://bolls.life/search/RV1960/?search=${encodeURIComponent(query)}`);
+                if(res.ok) {
+                    const results = await res.json();
+                    renderSearchResults(query, results);
+                } else {
+                    showMsg("Sin resultados o error en servidor");
+                }
+            } catch (err) {
+                showMsg("Error al conectar con la búsqueda");
+            }
+            loader.classList.remove('show');
+            document.getElementById('ltxt').textContent = "Cargando..."; 
+            input.blur(); 
         }
     });
+}
+
+function renderSearchResults(query, results) {
+    document.getElementById('welcome').style.display = 'none';
+    document.getElementById('chContent').style.display = 'none';
+    const resView = document.getElementById('searchResults');
+    resView.style.display = 'block';
+
+    if (!results || !Array.isArray(results) || results.length === 0) {
+        resView.innerHTML = `<div class="ch-hdr"><h2>Resultados para "${query}"</h2><p style="color:var(--t2); margin-top:10px;">No se encontraron resultados en el texto bíblico.</p></div>`;
+        return;
+    }
+
+    const limit = Math.min(results.length, 200);
+    const limitedResults = results.slice(0, limit);
+    const extraMsg = results.length > 200 ? ` <span style="font-size:14px; color:var(--t3)">(Mostrando primeros 200)</span>` : '';
+
+    let h = `<div class="ch-hdr"><h2>Resultados para "${query}" (${results.length})${extraMsg}</h2></div><div class="v-container">`;
+
+    limitedResults.forEach(r => {
+        const bookIdx = r.book - 1;
+        const b = BOOKS[bookIdx];
+        if(!b) return;
+        const text = r.text ? r.text.replace(/<[^>]+>/g, '') : '';
+        h += `<div class="verse" onclick="goToSearchResult(${bookIdx}, ${r.chapter}, ${r.verse})">
+            <span class="v-num" style="color:var(--google-green); margin-right:8px; font-size:13px;">${b.name} ${r.chapter}:${r.verse}</span>
+            <span class="v-text" style="font-size:${state.fontSize}px">${text}</span>
+        </div>`;
+    });
+    h += `</div>`;
+    resView.innerHTML = h;
+    document.getElementById('content').scrollTop = 0;
+    if (window.innerWidth <= 680) window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goToSearchResult(bookIdx, ch, v) {
+    selectBook(bookIdx);
+    setTimeout(() => goChapter(bookIdx, ch).then(() => {
+        setTimeout(() => {
+            const el = document.getElementById(`v-${v}`);
+            if(el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.style.backgroundColor = 'rgba(66,133,244,0.15)';
+                setTimeout(() => el.style.backgroundColor = '', 2000);
+            } else {
+                showMsg(`Versículo ${ch}:${v} no encontrado`);
+            }
+        }, 150);
+    }), 50);
 }
 
 // Inicialización y eventos
@@ -420,7 +494,6 @@ function init() {
     closeComments.onclick = () => document.getElementById('cSidebar').classList.add('hide');
     document.getElementById('cAdd').onclick = addCurrentComment;
     setupSearch();
-    // opcional: si hay un comentario activo al cargar
     const storedFont = localStorage.getItem('bible_font_size');
     if(storedFont) state.fontSize = parseInt(storedFont);
     window.addEventListener('beforeunload', () => localStorage.setItem('bible_font_size', state.fontSize));
@@ -432,7 +505,7 @@ window.selectBook = selectBook;
 window.copyV = copyV;
 window.selVerse = selVerse;
 window.deleteComment = deleteComment;
-window.goChapter = goChapter;
+window.goToSearchResult = goToSearchResult;
 </script>
 </body>
 </html>
